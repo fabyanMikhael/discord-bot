@@ -11,9 +11,9 @@ import discord,random, asyncio, time
 class BeeStorage:
     BEESTORAGE_REFERENCES : dict[Player, BeeStorageReference] = {}
     __slots__ = ["storage", "id"]
-    def __init__(self, user : Player, storage : dict[int, Bee] = None) -> None:
-        self.storage : dict[int, Bee] = {} if storage == None else storage
-        self.id = user.id
+    def __init__(self, id : str, storage : dict[str, Bee] = None) -> None:
+        self.storage : dict[str, Bee] = {} if storage == None else storage
+        self.id = str(id)
 
     def ToDict(self) -> dict:
         storage = {}
@@ -21,20 +21,21 @@ class BeeStorage:
             storage[slot] = self.storage[slot].ToDict()
         result = {}
         result['storage'] = storage
+        result['id'] = self.id
         return result
 
     @staticmethod
-    def FromDict(data : dict, user : Player) -> BeeStorage:
+    def FromDict(data : dict) -> BeeStorage:
         storage = {}
         for slot in data['storage']:
-            storage[int(slot)] = BeeStorage.FromDict(data['storage'][slot])
-        result = BeeStorage(user = user, storage=storage)
+            storage[str(slot)] = Bee.FromDict(data['storage'][slot], id = data['id'])
+        result = BeeStorage(id=data['id'], storage=storage)
         return result
 
     @staticmethod
     def GrowBeeForUser(user : Player, bee : Bee) -> None:
         bee_storage = BeeStorage.GetBeeStorage(user.id)
-        bee_storage.storage[len(bee_storage.storage)] = bee
+        bee_storage.storage[str(len(bee_storage.storage))] = bee
 
     async def CheckForCompletion(self, ctx):
         current_time = time.time()
@@ -48,12 +49,13 @@ class BeeStorage:
     def Save() -> None:
         for id in BeeStorage.BEESTORAGE_REFERENCES:
             BeeStorageRef = BeeStorage.BEESTORAGE_REFERENCES[id]
-            if BeeStorageRef.is_mutated:
+            if BeeStorageRef.ReferencedItem != None: #BeeStorageRef.is_mutated:
                 DATABASE.Save(key=BeeStorageRef.ReferencedItem.id, value=BeeStorageRef.ReferencedItem.ToDict())
-            BeeStorageRef.ReferencedItem = None
+                BeeStorageRef.ReferencedItem = None
 
     @staticmethod
     def GetBeeStorage(id : str) -> BeeStorage:
+        id = str(id)
         if id in BeeStorage.BEESTORAGE_REFERENCES: return BeeStorage.BEESTORAGE_REFERENCES[id]
         return BeeStorageReference(id = id)
 
@@ -76,15 +78,15 @@ class Bee:
         return result
 
     @staticmethod    
-    def FromDict(data : dict, user : Player) -> Bee:
+    def FromDict(data : dict, id : str) -> Bee:
         plant_type = data['type']
         if plant_type == "normal":
-            return NormalBee(user=user, time_left=data['time_left'])
+            return NormalBee(user= Player.GetPlayer(id = id), time_left=data['time_left'], dont_grow=True)
         raise TypeError(f"attempted to load unknown plant time!! (type={plant_type})")
 
 
 
-def NormalBee(user : Player, time_left : int = BEE_DURATION.NORMAL_BEE) -> Bee:
+def NormalBee(user : Player, time_left : int = BEE_DURATION.NORMAL_BEE, dont_grow = False) -> Bee:
     async def Reward(ctx):
         amount_to_give = random.randint(1,3)
 
@@ -104,9 +106,10 @@ def NormalBee(user : Player, time_left : int = BEE_DURATION.NORMAL_BEE) -> Bee:
             await msg.edit(embed=embed)
      
     bee = Bee(time = int( time_left + time.time() ), on_finish = Reward, user = user, name="`🐝 Bee`", type="normal")
-    BeeStorage.GrowBeeForUser(user = user,
-                              bee  = bee,
-                              )
+    if not dont_grow:    
+        BeeStorage.GrowBeeForUser(user = user,
+                                bee  = bee,
+                                )
     return bee
 
 

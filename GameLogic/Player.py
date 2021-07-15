@@ -14,7 +14,7 @@ class Player:
         from discord.utils import get
         self.name = get(Player.BOT.get_all_members(), id=int(id)).name
         ###################################################################################
-        self.inventory : Inventory = Inventory() if Inventory == None else inventory
+        self.inventory : Inventory = Inventory() if inventory == None else inventory
 
     def __hash__(self) -> int:
         return int(self.id)
@@ -38,6 +38,7 @@ class Player:
 
     @staticmethod
     def GetPlayer(id : str) -> Player:
+        id = str(id)
         if id in Player.PLAYER_REFERENCES: return Player.PLAYER_REFERENCES[id]
         return PlayerReference(id = id)
 
@@ -60,10 +61,15 @@ class Player:
     def Save() -> None:
         for id in Player.PLAYER_REFERENCES:
             PlayerRef = Player.PLAYER_REFERENCES[id]
-            if PlayerRef.is_mutated:
+            if PlayerRef.player != None: #PlayerRef.is_mutated:
                 DATABASE.Save(key=PlayerRef.player.id, value=PlayerRef.player.ToDict())
-            PlayerRef.player = None
+                PlayerRef.player = None
 
+    @staticmethod
+    def Clear() -> None:
+        for id in Player.PLAYER_REFERENCES:
+            PlayerRef = Player.PLAYER_REFERENCES[id]
+            PlayerRef.player = None
 
 class PlayerReference(object):
     def __init__(self, id : str) -> None:
@@ -71,6 +77,11 @@ class PlayerReference(object):
         self.id : str = id
         self.is_mutated : bool = False
         Player.PLAYER_REFERENCES[id] = self
+
+    def __repr__(self) -> str:
+        if self.player != None:
+            return self.player.__repr__()
+        return f"<EMPTY REFERENCE TO: {self.id}>"
 
     def __getattribute__(self, name):
         if name in ["player", "id", "is_mutated", "__attributeAccessed__", "__FetchPlayer__"]: return object.__getattribute__(self, name)

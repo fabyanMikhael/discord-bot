@@ -1,4 +1,4 @@
-from __future__ import annotations
+from __future__ import annotations, print_function
 import os, pymongo
 from pymongo.collection import Collection
 from dotenv import load_dotenv
@@ -25,6 +25,7 @@ class AbstractDatabase:
         if self.Get(key=key) != None:
             self.collection.update_one({'id':str(key)}, {"$set": value}, upsert=False)
         else :
+            print("inserting: ", value)
             self.collection.insert_one(value)
 
     def Delete(self, query : dict) -> None:

@@ -45,7 +45,7 @@ class PlantCommands(commands.Cog):
             plant = XSeedPlant(user=Player.GetPlayer(ctx.author.id))
             player.inventory.RemoveItem(seed_item)
             player.inventory.RemoveItem(water_droplet)
-            await ReplyWith(f"Successfully planted {seed_item} !\n\n It will take `{pretty_time_delta( int(plant.time_left - time.time()) )}` to finish! \n\n use `$checkplants` to check on it!")
+            await ReplyWith(f"Successfully planted {seed_item} !\n\n It will take `{pretty_time_delta( int(plant.finishing_time - time.time()) )}` to finish! \n\n use `$checkplants` to check on it!")
             return
 
         await ReplyWith( f"Error! {seed_item} is not a plantable item! !" )
@@ -60,9 +60,8 @@ class PlantCommands(commands.Cog):
         description= "Plants In Storage: ",
         color=discord.Color.dark_teal(),
         )
-
         for slot in storage.storage:
-            embed.add_field(inline=False, name="\u200b", value=f"**->** \u200b {storage.storage[slot]}**") #**[Slot {slot + 1}]\u200b 
+            embed.add_field(inline=False, name="\u200b", value=f"**->** \u200b {storage.storage[slot]}") #**[Slot {slot + 1}]\u200b 
 
         await ctx.reply(embed=embed)
 

@@ -83,7 +83,7 @@ async def on_reaction_add(reaction : Reaction, user):
 #bot.on_command_error = command_error
 
 
-@tasks.loop(seconds=10)
+@tasks.loop(seconds=60)
 async def SaveLoop():
     Player.Save()
     PlantStorage.Save()

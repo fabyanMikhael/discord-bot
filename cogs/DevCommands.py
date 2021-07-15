@@ -4,7 +4,7 @@ from discord.ext import commands
 from GameLogic.Player import Player
 from GameLogic.Items import Item
 from cogs.PlayerCommands import ConvertItemList
-from Utils.Constants import CURRENCY_SYMBOL, GLOBAL_SHOP, OnReactionOnly, OnReactionOnlyOnce
+from Utils.Constants import CURRENCY_SYMBOL, GLOBAL_SHOP, OnReactionOnly, OnReactionOnlyOnce, pretty_time_delta
 
 
 class DevCommands(commands.Cog):
@@ -112,6 +112,32 @@ class DevCommands(commands.Cog):
         color=discord.Color.dark_teal(),
         )
         await ctx.send(embed=embed)
+
+    @commands.is_owner()
+    @commands.command()
+    async def Clear(self, ctx: commands.Context):
+        Player.Clear()
+        await ctx.reply(content=f"Cleared {len(Player.PLAYER_REFERENCES)} references.")
+
+    @commands.is_owner()
+    @commands.command()
+    async def Save(self, ctx: commands.Context):
+        Player.Save()
+        await ctx.reply(content=f"Saved {len(Player.PLAYER_REFERENCES)} references.")
+
+    @commands.is_owner()
+    @commands.command()
+    async def SetBeeTime(self, ctx: commands.Context, time : int):
+        from Utils.Constants import BEE_DURATION
+        await ctx.reply(content=f"Ok. changed bee growth time from {BEE_DURATION.NORMAL_BEE} to {pretty_time_delta(time)}")
+        BEE_DURATION.NORMAL_BEE = time
+
+    @commands.is_owner()
+    @commands.command()
+    async def SetSeedTime(self, ctx: commands.Context, time : int):
+        from Utils.Constants import SEED_DURATION
+        await ctx.reply(content=f"Ok. changed plant growth time from {SEED_DURATION.X_SEED} to {pretty_time_delta(time)}")
+        SEED_DURATION.X_SEED = time
 
     @commands.is_owner()
     @commands.command()

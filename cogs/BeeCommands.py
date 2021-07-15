@@ -57,7 +57,7 @@ class BeeCommands(commands.Cog):
         )
 
         for slot in storage.storage:
-            embed.add_field(inline=False, name="\u200b", value=f"**->** \u200b {storage.storage[slot]}**") #**[Slot {slot + 1}]\u200b
+            embed.add_field(inline=False, name="\u200b", value=f"**->** \u200b {storage.storage[slot]}") #**[Slot {slot + 1}]\u200b
 
         await ctx.reply(embed=embed)
 

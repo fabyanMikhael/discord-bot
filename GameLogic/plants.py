@@ -10,9 +10,9 @@ import random, asyncio, discord, time
 class PlantStorage:
     PLANTSTORAGE_REFERENCES : dict[str, PlantStorageReference] = {}
     __slots__ = ["storage", "id"]
-    def __init__(self, user : Player, storage : dict[int, Plant] = None) -> None:
-        self.storage: dict[int, Plant] = {} if storage == None else storage
-        self.id = user.id
+    def __init__(self, id : str, storage : dict[str, Plant] = None) -> None:
+        self.storage: dict[str, Plant] = {} if storage == None else storage
+        self.id = str(id)
 
     def ToDict(self) -> dict:
         storage = {}
@@ -20,20 +20,21 @@ class PlantStorage:
             storage[slot] = self.storage[slot].ToDict()
         result = {}
         result['storage'] = storage
+        result['id'] = self.id
         return result
 
     @staticmethod
-    def FromDict(data : dict, user : Player) -> PlantStorage:
+    def FromDict(data : dict) -> PlantStorage:
         storage = {}
         for slot in data['storage']:
-            storage[int(slot)] = Plant.FromDict(data['storage'][slot])
-        result = PlantStorage(user = user, storage=storage)
+            storage[slot] = Plant.FromDict(data['storage'][slot], data['id'])
+        result = PlantStorage(id = data['id'], storage=storage)
         return result
 
     @staticmethod
     def PlantForUser(user : Player, plant : Plant) -> None:
         plant_storage = PlantStorage.GetPlantStorage(user.id)
-        plant_storage.storage[len(plant_storage.storage)] = plant
+        plant_storage.storage[str(len(plant_storage.storage))] = plant
 
     async def CheckForCompletion(self, ctx):
         current_time = time.time()
@@ -47,14 +48,15 @@ class PlantStorage:
     def Save() -> None:
         for id in PlantStorage.PLANTSTORAGE_REFERENCES:
             PlantStorageRef = PlantStorage.PLANTSTORAGE_REFERENCES[id]
-            if PlantStorageRef.is_mutated:
+            if PlantStorageRef.ReferencedItem != None: #PlantStorageRef.is_mutated:
                 DATABASE.Save(key=PlantStorageRef.ReferencedItem.id, value=PlantStorageRef.ReferencedItem.ToDict())
-            PlantStorageRef.ReferencedItem = None
+                PlantStorageRef.ReferencedItem = None
 
     @staticmethod
     def GetPlantStorage(id : str) -> PlantStorage:
+        id = str(id)
         if id in PlantStorage.PLANTSTORAGE_REFERENCES: return PlantStorage.PLANTSTORAGE_REFERENCES[id]
-        return PlantStorage(id = id)
+        return PlantStorageReference(id = id)
 
 class Plant:
     def __init__(self, time: int, on_finish, user : Player, name : str = "Plant", type="normal") -> None:
@@ -75,15 +77,15 @@ class Plant:
         return result
 
     @staticmethod    
-    def FromDict(data : dict, user : Player) -> Plant:
+    def FromDict(data : dict, id : str) -> Plant:
         plant_type = data['type']
         if plant_type == "x":
-            return XSeedPlant(user=user, time_left=data['time_left'])
+            return XSeedPlant(user=Player.GetPlayer(id = id), time_left=data['time_left'], dont_plant=True)
         raise TypeError(f"attempted to load unknown plant time!! (type={plant_type})")
 
 
 
-def XSeedPlant(user : Player, time_left : int = SEED_DURATION.X_SEED) -> Plant:
+def XSeedPlant(user : Player, time_left : int = SEED_DURATION.X_SEED, dont_plant = False) -> Plant:
     async def Reward(ctx):
         amount_to_give = random.randint(2,8)
         items_to_give = [Item.GetRandomItem() for _ in range(amount_to_give)]
@@ -102,9 +104,10 @@ def XSeedPlant(user : Player, time_left : int = SEED_DURATION.X_SEED) -> Plant:
             await msg.edit(embed=embed)
 
     plant = Plant(time= int(time_left + time.time()), on_finish = Reward, user = user, name="`🌱 X Plant`", type="x")
-    PlantStorage.PlantForUser(user = user,
-                              plant = plant,
-                              )
+    if not dont_plant:
+        PlantStorage.PlantForUser(user = user,
+                                plant = plant,
+                                )
     return plant
 
 class PlantStorageReference(object):
