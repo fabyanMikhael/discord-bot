@@ -7,7 +7,7 @@ from discord.ext import commands
 from GameLogic.Player import Player
 from GameLogic.Items import Item
 from cogs.PlayerCommands import ConvertItemList
-from Utils.Constants import CURRENCY_SYMBOL, GLOBAL_SHOP, OnReactionOnly, OnReactionOnlyOnce, pretty_time_delta
+from Utils.Constants import CURRENCY_SYMBOL, GLOBAL_SHOP, OnReactionOnly, OnReactionOnlyOnce, RefreshShop, pretty_time_delta
 
 
 class DevCommands(commands.Cog):
@@ -199,6 +199,13 @@ class DevCommands(commands.Cog):
         BeeStorage.DeleteBeeStorage(user.id)
         Trade.CancelTradesWith(user.id)
         await ctx.reply(content=f"Ok. deleted {user.mention} from database.")
+
+    @commands.is_owner()
+    @commands.command()
+    async def RefreshShop(self, ctx: commands.Context):
+        """Refreshes the shop automagically"""
+        await RefreshShop()
+        await ctx.reply(content=f"Ok. refreshed the shop.")
 
     @commands.is_owner()
     @commands.command()

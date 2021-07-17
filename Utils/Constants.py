@@ -9,12 +9,17 @@ BOT_MAX_ITEMS_SELLING = 10
 PLAYER_DATA_FILEPATH = './Data/PlayerData.json'
 
 #SHOP
+import time
 from GameLogic.Items import Item
 import asyncio
 from GameLogic.Player import Player
 import discord
 from GameLogic.shop import Shop
 GLOBAL_SHOP = Shop()
+
+# NEXT SHOP REFRESH
+class SHOP_CONSTANTS:
+    next_refresh_at : int = 0
 
 #SEED GROWTH DURATION
 MINUTE = 60 # will be changed when debugging so plants can grow quickly
@@ -26,6 +31,10 @@ class SEED_DURATION:
 #BEE GROWTH DURATION
 class BEE_DURATION:
     normal_bee = MINUTE * 10
+
+HOUR = 60 * 60
+#Time it takes for a pet to grow up
+PET_GROWTH_DURATION = HOUR * 18
 
 #GLOBAL DICTIONARY OF EVENTS
 MSG_EVENTS : dict[int, list] = {}
@@ -123,3 +132,9 @@ async def RewardUI( ctx, user : Player, title : str , items_to_give : list[Item]
             Player.GetPlayer(user.id).inventory.AddItem(items_to_give[i])
             await asyncio.sleep(1.5)
             await msg.edit(embed=embed)
+
+async def RefreshShop():
+    SHOP_CONSTANTS.next_refresh_at = time.time() + (60 * 30)
+    bot_user = Player.GetPlayer(Player.BOT.user.id)
+    for sale in GLOBAL_SHOP.GetAllSalesFor(user = bot_user):
+        sale.Cancel()

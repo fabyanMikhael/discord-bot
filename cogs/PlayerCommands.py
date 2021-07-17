@@ -1,6 +1,7 @@
 ################Imports##############################
 import asyncio
 import random
+import time
 import discord
 
 from discord.ext import commands
@@ -10,7 +11,7 @@ from GameLogic.shop import Sale, CURRENCY_SYMBOL
 from GameLogic.Player import Player
 from GameLogic.Items import Inventory, Item
 from GameLogic.Trading import PendingTrade, Trade, IsTrading, GetAnyTradeInvolving
-from Utils.Constants import ITEMS_PER_TRADE_LIMIT, RewardUI
+from Utils.Constants import ITEMS_PER_TRADE_LIMIT, RewardUI, SHOP_CONSTANTS
 
 from Utils.Constants import GLOBAL_SHOP, pretty_time_delta, ConvertItemList
 from discord.ext.commands import MemberConverter
@@ -549,6 +550,13 @@ class PlayerCommands(commands.Cog):
         else:
             await ReplyWith(f"⚙️ Error: you cannot activate {item}! \u200b\u200b⚙️")
 
+
+    @commands.command()
+    async def NextRefresh(self, ctx: commands.Context):
+        """Will show how much time is left until the next refresh"""
+        time_left = int( SHOP_CONSTANTS.next_refresh_at - time.time() )
+        time_left = pretty_time_delta(seconds=time_left)
+        await ctx.send(f"The next shop `refresh` is in `{time_left}`")
 
 def setup(bot):
     bot.add_cog(PlayerCommands(bot))

@@ -1,6 +1,7 @@
 ###############################
 '''this loads the "DISCORD_TOKEN" string from the .env file'''
 
+import time
 from discord.reaction import Reaction
 from dotenv import load_dotenv
 import os, random
@@ -14,7 +15,7 @@ TOKEN = os.environ["DISCORD_TOKEN"]
 ################ IMPORTS ################
 import discord
 from Utils.ErrorHandling import command_error
-from Utils.Constants import BOT_MAX_ITEMS_SELLING, GLOBAL_SHOP, MSG_EVENTS
+from Utils.Constants import BOT_MAX_ITEMS_SELLING, GLOBAL_SHOP, MSG_EVENTS, RefreshShop, SHOP_CONSTANTS
 from discord.ext import commands
 from GameLogic.Player import Player
 from GameLogic.Trading import CancelAllTrades
@@ -98,11 +99,9 @@ async def BotSellItem():
         GLOBAL_SHOP.AddSale(sale=sale)
         items.append(sale)
 
-@tasks.loop(minutes=29)
+@tasks.loop(minutes=30)
 async def BotRefreshSales():
-    bot_user = Player.GetPlayer(bot.user.id)
-    for sale in GLOBAL_SHOP.GetAllSalesFor(user = bot_user):
-        sale.Cancel()
+    await RefreshShop()
 
 @bot.event 
 async def on_ready():
@@ -110,6 +109,8 @@ async def on_ready():
     SaveLoop.start()
     BotSellItem.start()
     GLOBAL_SHOP.LoadAll()
+    BotRefreshSales.start()
+    SHOP_CONSTANTS.next_refresh_at = time.time() + (60 * 30)
     print(f"{bot.user.name} has connected to Discord!")
     LoadCogs()
 

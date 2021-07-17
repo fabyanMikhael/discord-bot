@@ -49,9 +49,12 @@ class PlantCollection(AbstractDatabase):
 class BeeCollection(AbstractDatabase):
     def __init__(self) -> None:
         super().__init__(MongoDatabase["Bees"])
-
+class PetCollection(AbstractDatabase):
+    def __init__(self) -> None:
+        super().__init__(MongoDatabase["Pets"])
 
 PlayerDatabase = PlayerCollection()
 ShopDatabase = ShopCollection()
 PlantDatabase = PlantCollection()
 BeeDatabase = BeeCollection()
+PetDatabase = PetCollection()
