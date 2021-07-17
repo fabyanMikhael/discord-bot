@@ -9,8 +9,9 @@ class Item:
     ITEMS : dict [int, Item] = {}
     NAME_TO_ITEM : dict[str, Item] = {}
     RARITY : dict[str, list[Item]] = {"common" : []}
+    CATEGORIES : dict[str, list[Item]] = {}
     ID_COUNTER = 0
-    def __init__(self, name : str, icon : str, id : int = None, block=True, rarity : str = "common") -> None:
+    def __init__(self, name : str, icon : str, id : int = None, block=True, rarity : str = "common", category : str = None) -> None:
         if id == None:
             id = Item.ID_COUNTER
             Item.ID_COUNTER += 1
@@ -20,7 +21,25 @@ class Item:
         self.rarity = rarity
         Item.ITEMS[id] = self
         Item.NAME_TO_ITEM[name.lower()] = self
+        if category != None:
+            category = category.lower()
+            if not category in Item.CATEGORIES: Item.CATEGORIES[category] = []
+            Item.CATEGORIES[category].append(self)
         Item.RARITY[rarity].append(self)
+
+    def SetName(self, name : str) -> Item:
+        self.name = name
+        return self
+
+    def SetRarity(self, rarity : str) -> Item:
+        self.rarity = rarity
+        return self
+
+    def AddToCategory(self, category : str) -> Item:
+        category = category.lower()
+        if not category in Item.CATEGORIES: Item.CATEGORIES[category] = []
+        Item.CATEGORIES[category].append(self)
+        return self
 
     def __repr__(self) -> str:
         return f"{self.icon} - **{self.name}**"
@@ -48,6 +67,30 @@ class Item:
         Item.LoadItems()
         id = random.choice( list(Item.ITEMS) )
         return Item.GetItem(id=id)
+
+    @staticmethod
+    def GetRandomItemFrom(category : str) -> Item:
+        """grabs a random item from the specified category in the static variables"""
+        Item.LoadItems()
+        if not category in Item.CATEGORIES: raise InventoryError(f"cannot find category: {category}")
+        item = random.choice( Item.CATEGORIES[category] )
+        return item
+
+    @staticmethod
+    def GetRandomItems(count : int) -> list:
+        """returns a list of random items"""
+        items = []
+        for _ in range(count):
+            items.append( Item.GetRandomItem() )
+        return items
+
+    @staticmethod
+    def GetRandomItemsFrom(category : str, count : int) -> list[Item]:
+        """returns a list of random items from the specified category"""
+        items = []
+        for _ in range(count):
+            items.append( Item.GetRandomItemFrom(category) )
+        return items
 
     ITEMS_LOADED = False
     @staticmethod
@@ -116,8 +159,38 @@ class Inventory:
             self.RemoveItem(item, items[item])
         return self
 
+    def Clear(self) -> dict[Item, int]:
+        old = self.items
+        self.items = {}
+        return old
+
     def GetItemCount(self, item : Item) -> int:
         return self.items.get(item, 0)
+
+    def GetRandomItems(self, count : int) -> dict[Item, int]:
+        """returns a dictionary of random items from the user's inventory. if the user has less items than count, all of them will be returned"""
+        if count > self.GetTotalItems():
+            return self.items.copy()
+        items = {}
+        for _ in range(count):
+            item = random.choice( list(self.items) )
+            if item in items:
+                while items[item] >= self.items[item]:
+                    item = random.choice( list(self.items) )
+            items[item] = items.get(item, 0) + 1
+        return items
+
+    @staticmethod
+    def GetDictAsList(items) -> list[Item]:
+        """returns a list from a dictionary of items->int"""
+        result = []
+        for item in items:
+            for _ in range(items[item]):
+                result.append(item)
+        return result
+
+    def GetTotalItems(self) -> int:
+        return sum(self.items.values())
 
     def HasItem(self, item : Item) -> bool:
         return self.GetItemCount(item) > 0
@@ -150,8 +223,8 @@ def LoadAllItems():
     Item(name="Syringe", icon="💉")
     Item(name="The World", icon="🌎")
     Item(name="The Universe", icon="🌌")
-    Item(name="water droplet", icon="💧")
-    Item(name="X Seed", icon="🌱")
+    Item(name="water droplet", icon="💧").AddToCategory("plants")
+    Item(name="X Seed", icon="🌱").AddToCategory("plants")
     Item(name="Comet", icon="☄️")
     Item(name="Shooting Star", icon="🌠")
     Item(name="Clown", icon="🤡")
@@ -163,19 +236,19 @@ def LoadAllItems():
     Item(name="Confetti", icon="🎊")
     Item(name="Candle", icon="🕯️")
 
-    Item(name="Grapes", icon="🍇")
-    Item(name="Melon", icon="🍈")
-    Item(name="Watermelon", icon="🍉")
-    Item(name="Tangerine", icon="🍊")
-    Item(name="Lemon", icon="🍋")
-    Item(name="Banana", icon="🍌")
-    Item(name="Pineapple", icon="🍍")
-    Item(name="Mango", icon="🥭")
-    Item(name="Apple", icon="🍎")
-    Item(name="Green Apple", icon="🍏")
-    Item(name="Pear", icon="🍐")
-    Item(name="Peach", icon="🍑")
-    Item(name="Cherries", icon="🍒")
+    Item(name="Grapes", icon="🍇").AddToCategory("plants")
+    Item(name="Melon", icon="🍈").AddToCategory("plants")
+    Item(name="Watermelon", icon="🍉").AddToCategory("plants")
+    Item(name="Tangerine", icon="🍊").AddToCategory("plants")
+    Item(name="Lemon", icon="🍋").AddToCategory("plants")
+    Item(name="Banana", icon="🍌").AddToCategory("plants")
+    Item(name="Pineapple", icon="🍍").AddToCategory("plants")
+    Item(name="Mango", icon="🥭").AddToCategory("plants")
+    Item(name="Apple", icon="🍎").AddToCategory("plants")
+    Item(name="Green Apple", icon="🍏").AddToCategory("plants")
+    Item(name="Pear", icon="🍐").AddToCategory("plants")
+    Item(name="Peach", icon="🍑").AddToCategory("plants")
+    Item(name="Cherries", icon="🍒").AddToCategory("plants")
 
     Item(name="Satellite", icon="🛰️")
     Item(name="Rocket", icon="🚀")
@@ -186,10 +259,10 @@ def LoadAllItems():
     Item(name="Fireworks", icon="🎆")
     Item(name="Sparkler", icon="🎇")
 
-    Item(name="Bee", icon="🐝")
-    Item(name="Honey", icon="🍯")
+    Item(name="Bee", icon="🐝").AddToCategory("bees")
+    Item(name="Honey", icon="🍯").AddToCategory("bees")
     Item(name="Teddy bear", icon="🧸")
-    Item(name="Lootbox", icon="📦")
+    Item(name="Lootbox", icon="📦").AddToCategory("lootbox")
     Item(name="Zonu", icon="<:zonu:864377761337180170>", block=False)
     
     Item(name="Mask", icon="👺")
@@ -223,12 +296,12 @@ def LoadAllItems():
     Item(name="Mushroom", icon="🍄")
     Item(name="Cactus", icon="🌵")
     Item(name="Christmas Tree", icon="🎄")
-    Item(name="Clover", icon="☘️")
-    Item(name="4 Leaf Clover", icon="🍀")
-    Item(name="Tulip", icon="🌷")   
-    Item(name="Rose", icon="🌹")
-    Item(name="Sunflower", icon="🌻") 
-    Item(name="Onion", icon="🧅") 
+    Item(name="Clover", icon="☘️").AddToCategory("usable")
+    Item(name="4 Leaf Clover", icon="🍀").AddToCategory("plants")
+    Item(name="Tulip", icon="🌷").AddToCategory("plants")
+    Item(name="Rose", icon="🌹").AddToCategory("plants")
+    Item(name="Sunflower", icon="🌻").AddToCategory("plants")
+    Item(name="Onion", icon="🧅").AddToCategory("plants")
     Item(name="Egg", icon="🥚") 
     Item(name="Cheese", icon="🧀") 
     Item(name="Pancakes", icon="🥞") 
@@ -243,7 +316,7 @@ def LoadAllItems():
     Item(name="Baseball", icon="⚾") 
     Item(name="Tennis Ball", icon="🥎") 
     Item(name="Medal", icon="🏅") 
-    Item(name="Dice", icon="🎲")
+    Item(name="Dice", icon="🎲").AddToCategory("usable")
     Item(name="Scooter", icon="🛴")
     Item(name="Bicycle", icon="🚲")
     Item(name="Wheelchair", icon="🦽")
@@ -261,4 +334,26 @@ def LoadAllItems():
     Item(name="Health Potion", icon="<:healthpotion:864727727357427753>", block=False)
     Item(name="Ember Insect", icon="<:emberedInsect:864725884212609054>", block=False)
 
-    
+    Item(name="Arctic Parasite Seed", icon="<:arcticParasitePlant:865436985237176330>", block=False).AddToCategory("plants").AddToCategory("arctic")
+    Item(name="Arctic Parasite", icon="<:arcticParasite:865437942851043338>", block=False).AddToCategory("plants").AddToCategory("arctic").AddToCategory("usable")
+
+    Item(name="Wooden Seed", icon="<:WoodenSeed:865434094917124157>", block=False).AddToCategory("plants").AddToCategory("wooden")
+    Item(name="Wooden Rino", icon="<:WoodenRino:865434109962878996>", block=False).AddToCategory("plants").AddToCategory("wooden")
+    Item(name="Wooden Bear", icon="<:WoodenBear:865438515784581170>", block=False).AddToCategory("plants").AddToCategory("wooden")
+    Item(name="Wooden Boar", icon="<:WoodenBoar:865438515293847563>", block=False).AddToCategory("plants").AddToCategory("wooden")
+    Item(name="Wooden Bunny", icon="<:WoodenBunny:865438515897303040>", block=False).AddToCategory("plants").AddToCategory("wooden")
+    Item(name="Wooden Moose", icon="<:WoodenMoose:865438515989708810>", block=False).AddToCategory("plants").AddToCategory("wooden")
+    Item(name="Wooden Owl", icon="<:WoodenOwl:865438515541573652>", block=False).AddToCategory("plants").AddToCategory("wooden")
+    Item(name="Wooden Snail", icon="<:WoodenSnail:865438515617726487>", block=False).AddToCategory("plants").AddToCategory("wooden")
+    Item(name="Wooden Squirrel", icon="<:WoodenSquirrel:865438515764265020>", block=False).AddToCategory("plants").AddToCategory("wooden")
+    Item(name="Wood Log", icon="<:WoodenLog:865439400723611648>", block=False).AddToCategory("plants").AddToCategory("wooden")
+    Item(name="Wood Plank", icon="<:WoodPlank:865439400691630120>", block=False).AddToCategory("plants").AddToCategory("wooden")
+
+
+    Item(name="Devil's Feathers", icon="<:ArcticDevilsfeathers:865452032965345340>", block=False).AddToCategory("arctic").AddToCategory("devil")
+    Item(name="Axe", icon="<:Axe:865452032894697502>", block=False).AddToCategory("Barbarian")
+    Item(name="arrows", icon="<:arrows:865452032513409075>", block=False).AddToCategory("Barbarian")
+    Item(name="Fish", icon="<:Fish_:865452032378535947>", block=False).AddToCategory("Barbarian")
+    Item(name="Barbarian Helmet", icon="<:BarbarianHelmet:865452032579469332>", block=False).AddToCategory("Barbarian")
+    Item(name="Dagger", icon="<:Dagger:865452032541196298>", block=False).AddToCategory("Barbarian")
+    Item(name="Bow", icon="<:Bow:865452032756154398>", block=False).AddToCategory("Barbarian")

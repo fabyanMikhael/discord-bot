@@ -3,7 +3,7 @@
 
 from discord.reaction import Reaction
 from dotenv import load_dotenv
-import os
+import os, random
 
 load_dotenv()
 
@@ -14,7 +14,7 @@ TOKEN = os.environ["DISCORD_TOKEN"]
 ################ IMPORTS ################
 import discord
 from Utils.ErrorHandling import command_error
-from Utils.Constants import GLOBAL_SHOP, MSG_EVENTS
+from Utils.Constants import BOT_MAX_ITEMS_SELLING, GLOBAL_SHOP, MSG_EVENTS
 from discord.ext import commands
 from GameLogic.Player import Player
 from GameLogic.Trading import CancelAllTrades
@@ -32,6 +32,7 @@ bot : commands.Bot = commands.Bot(
                     intents=intents,
                     help_command=None
                     )
+
 
 def LoadCogs():
     if not os.path.isdir("cogs"): 
@@ -54,11 +55,6 @@ def LoadCogs():
             #raise e
 
     print("\u001b[36mdone loading cogs \u001b[0m")
-
-@bot.event 
-async def on_ready():
-    print(f"{bot.user.name} has connected to Discord!")
-    LoadCogs()
 
 @bot.event
 async def on_message(message : discord.Message):
@@ -83,18 +79,39 @@ async def on_reaction_add(reaction : Reaction, user):
 #bot.on_command_error = command_error
 
 
-@tasks.loop(seconds=60)
+@tasks.loop(seconds=(60 * 5))
 async def SaveLoop():
     Player.Save()
     PlantStorage.Save()
     BeeStorage.Save()
 
-SaveLoop.start()
 
+@tasks.loop(seconds=30)
+async def BotSellItem():
+    from GameLogic.Items import Item
+    from GameLogic.shop import Sale
+    # get the items the bot is currently selling in the shop
+    bot_user = Player.GetPlayer(bot.user.id)
+    items = GLOBAL_SHOP.GetAllSalesFor(user = bot_user)
+    if len(items) < BOT_MAX_ITEMS_SELLING:
+        sale = Sale(item= Item.GetRandomItem(), amount=1, price=random.randint(3, 11), seller=bot_user)
+        GLOBAL_SHOP.AddSale(sale=sale)
+        items.append(sale)
 
-Player.BOT = bot
+@tasks.loop(minutes=29)
+async def BotRefreshSales():
+    bot_user = Player.GetPlayer(bot.user.id)
+    for sale in GLOBAL_SHOP.GetAllSalesFor(user = bot_user):
+        sale.Cancel()
 
-GLOBAL_SHOP.LoadAll()
+@bot.event 
+async def on_ready():
+    Player.BOT = bot
+    SaveLoop.start()
+    BotSellItem.start()
+    GLOBAL_SHOP.LoadAll()
+    print(f"{bot.user.name} has connected to Discord!")
+    LoadCogs()
 
 bot.run(TOKEN)
 

@@ -17,15 +17,7 @@ def ErrorMessage (description : str):
     return decorator
     
 async def command_error(ctx: Context, error: CommandError):
-    
-    embed = discord.Embed(
-        title="⚙️ ERROR ⚙️",
-        description= f"{error}",
-        color=discord.Color.dark_teal(),
-        )
-    await ctx.reply(embed=embed)
-    return
-
+    print(error)
     if ctx.command == None:
         command_name = ctx.invoked_with
         bot : Bot = ctx.bot
@@ -37,7 +29,7 @@ async def command_error(ctx: Context, error: CommandError):
             if existing in command_name or command_name in existing:
                 suggestion = f"\n\nDid you mean `${existing_command}` ?"
                 break
-            asyncio.sleep(0)
+            await asyncio.sleep(0)
 
         embed = discord.Embed(
             title="⚙️ Suggested ⚙️",

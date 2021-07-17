@@ -3,9 +3,9 @@ from __future__ import annotations
 ###################### IMPORTS ######################
 from GameLogic.Player import Player
 from GameLogic.Items import Item
-from Utils.Constants import BEE_DURATION, pretty_time_delta
+from Utils.Constants import BEE_DURATION, RewardUI, pretty_time_delta
 from Utils.Database import BeeDatabase as DATABASE
-import discord,random, asyncio, time
+import random, time
 #####################################################
 
 class BeeStorage:
@@ -59,6 +59,13 @@ class BeeStorage:
         if id in BeeStorage.BEESTORAGE_REFERENCES: return BeeStorage.BEESTORAGE_REFERENCES[id]
         return BeeStorageReference(id = id)
 
+    @staticmethod
+    def DeleteBeeStorage(id : str) -> None:
+        id = str(id)
+        BeeStorage.GetBeeStorage(id)
+        BeeStorage.BEESTORAGE_REFERENCES.pop(id).ReferencedItem = None
+        DATABASE.Delete(id)
+
 class Bee:
     def __init__(self, time: int, on_finish, user : Player, name : str = "Bee", type = "normal") -> None:
         self.finishing_time: int = time
@@ -86,24 +93,17 @@ class Bee:
 
 
 
-def NormalBee(user : Player, time_left : int = BEE_DURATION.NORMAL_BEE, dont_grow = False) -> Bee:
+def NormalBee(user : Player, time_left : int = None, dont_grow = False) -> Bee:
+    if time_left == None: time_left = BEE_DURATION.normal_bee
     async def Reward(ctx):
-        amount_to_give = random.randint(1,3)
 
-        items_to_give = [Item.GetItem("honey") for _ in range(random.randint(1,3))] + [Item.GetRandomItem() for _ in range(amount_to_give)]
-        hidden_content = ["**->** <a:loading:794672829202300939>" for _ in range(amount_to_give)]
-        embed = discord.Embed(
-        title="🐝 Harvesting Bee 🐝",
-        description= "\n\n".join(hidden_content),
-        color=discord.Color.dark_teal(),
-        )
-        msg = await ctx.reply(embed=embed)
-        for i in range(amount_to_give):
-            await asyncio.sleep(0.9)
-            hidden_content[i] = f"**->** {items_to_give[i]}"
-            embed.description = "\n\n".join(hidden_content)
-            Player.GetPlayer(user.id).inventory.AddItem(items_to_give[i])
-            await msg.edit(embed=embed)
+        items_to_give = [Item.GetItem("honey") for _ in range(random.randint(1,3))]
+        for _ in range(random.randint(1,3)): items_to_give.append(Item.GetRandomItem())
+        user.inventory.AddItem(Item.GetItem("bee"))
+        await RewardUI(ctx = ctx,
+                       user=user,
+                       items=items_to_give,
+                       title="🐝 Harvesting Bees 🐝",)
      
     bee = Bee(time = int( time_left + time.time() ), on_finish = Reward, user = user, name="`🐝 Bee`", type="normal")
     if not dont_grow:    

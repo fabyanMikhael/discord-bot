@@ -3,21 +3,29 @@ CURRENCY_SYMBOL = "💰"
 PAGE_ITEM_LIMIT = 10
 ITEMS_PER_TRADE_LIMIT = 10
 STARTING_AMOUNT_OF_LOOTBOXES = 5
+BOT_MAX_ITEMS_SELLING = 10
 
 #SAVING CONFIG
 PLAYER_DATA_FILEPATH = './Data/PlayerData.json'
 
 #SHOP
+from GameLogic.Items import Item
+import asyncio
+from GameLogic.Player import Player
+import discord
 from GameLogic.shop import Shop
 GLOBAL_SHOP = Shop()
 
 #SEED GROWTH DURATION
+MINUTE = 60 # will be changed when debugging so plants can grow quickly
 class SEED_DURATION:
-    X_SEED = 60 * 15
+    x_seed =            MINUTE * 15
+    wooden_seed =       MINUTE * 15
+    arctic_parasite =   MINUTE * 20
 
 #BEE GROWTH DURATION
 class BEE_DURATION:
-    NORMAL_BEE = 60 * 10
+    normal_bee = MINUTE * 10
 
 #GLOBAL DICTIONARY OF EVENTS
 MSG_EVENTS : dict[int, list] = {}
@@ -100,3 +108,18 @@ def ConvertItemList(items : list) -> list:
     if "" in result: result.remove("")
     ###################################################
     return result
+ 
+async def RewardUI( ctx, user : Player, title : str , items_to_give : list[Item]):
+        hidden_content = ["**->** <a:loading:794672829202300939>" for _ in range(len(items_to_give))]
+        embed = discord.Embed(
+        title=title,
+        description= "\n\n".join(hidden_content),
+        color=discord.Color.dark_teal(),
+        )
+        msg = await ctx.reply(embed=embed)
+        for i in range(len(items_to_give)):
+            hidden_content[i] = f"**->** {items_to_give[i]}"
+            embed.description = "\n\n".join(hidden_content)
+            Player.GetPlayer(user.id).inventory.AddItem(items_to_give[i])
+            await asyncio.sleep(1.5)
+            await msg.edit(embed=embed)

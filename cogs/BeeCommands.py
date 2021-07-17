@@ -17,7 +17,7 @@ class BeeCommands(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def GrowBee(self, ctx: commands.Context):
+    async def GrowBee(self, ctx: commands.Context, *bees : str):
         async def ReplyWith(text):
             embed = discord.Embed(
             title="🐝Beekeeping🐝",
@@ -25,20 +25,23 @@ class BeeCommands(commands.Cog):
             color=discord.Color.dark_teal(),
             )
             await ctx.reply(embed=embed)
-
+        if len(bees) == 0:
+            await ReplyWith( f"Error! use **$growbee** `bee name`!" )
+            return
         player = Player.GetPlayer(id = ctx.author.id)
         honey = Item.GetItem(id = "honey")
         if not player.inventory.HasItem(item=honey):
             await ReplyWith( f"Error! You do not have any {honey} !" )
             return
-
-        bee = Item.GetItem("bee")
+        bees = " ".join(bees)
+        bee = Item.GetItem(bees)
         if not player.inventory.HasItem(item=bee):
             await ReplyWith( f"Error! You do not have any {bee} !" )
             return
 
         if bee.name.lower() == "bee":
             bee_growing = NormalBee(user=Player.GetPlayer(ctx.author.id))
+            player.inventory.RemoveItem(bee)
             player.inventory.RemoveItem(honey)
             await ReplyWith(f"\n\n {bee} will take `{pretty_time_delta( int(bee_growing.finishing_time - time.time()) )}` to finish! \n\n use `$checkbees` to check on it!")
             return

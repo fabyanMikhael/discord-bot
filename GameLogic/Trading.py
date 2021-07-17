@@ -119,6 +119,16 @@ class Trade:
         return result
 
     @staticmethod
+    def CancelTradesWith(id : str) -> list[Trade]:
+        user = Player.GetPlayer(id)
+        result = []
+        for trade_id in Trade.TRADES.copy():
+            trade : Trade = Trade.TRADES[trade_id]
+            if user == trade.UserOne or user == trade.UserTwo:
+                trade.Cancel()
+        return result
+
+    @staticmethod
     def GetTradeBy(user: Player) -> Trade:
         for trade_id in Trade.TRADES:
             trade : Trade = Trade.TRADES[trade_id]

@@ -10,32 +10,15 @@ from GameLogic.shop import Sale, CURRENCY_SYMBOL
 from GameLogic.Player import Player
 from GameLogic.Items import Inventory, Item
 from GameLogic.Trading import PendingTrade, Trade, IsTrading, GetAnyTradeInvolving
-from Utils.Constants import ITEMS_PER_TRADE_LIMIT
+from Utils.Constants import ITEMS_PER_TRADE_LIMIT, RewardUI
 
-from Utils.Constants import GLOBAL_SHOP, pretty_time_delta
+from Utils.Constants import GLOBAL_SHOP, pretty_time_delta, ConvertItemList
+from discord.ext.commands import MemberConverter
 
 #####################################################
 
 ################Helper functions#######################
-def ConvertItemList(items : list) -> list:
-    result = []
-    if len(items) == 0: return result
-    tmp = []
-    for item in items:
-        try :
-            possible_num = int(item)
-            result.append( " ".join(tmp) )
-            result.append(possible_num)
-            tmp = []
-        except:
-            tmp.append(item)
-    if len(tmp) > 0 : result.append( " ".join(tmp) ) 
-    if isinstance(result[-1], str): result.append(1)
-    #################### TEMPORARY ####################
-    if "" in result: result.remove("")
-    ###################################################
-    return result
-
+converter = MemberConverter()
 #####################################################
 
 class PlayerCommands(commands.Cog):
@@ -486,7 +469,7 @@ class PlayerCommands(commands.Cog):
 
     @commands.command()
     async def use(self, ctx: commands.Context,  *items : str):
-        """"Will attempt to use the item!"""
+        """will attempt to use the items you have provided"""
         items = ConvertItemList(items)
         async def ReplyWith(text : str):
             embed = discord.Embed(
@@ -518,28 +501,54 @@ class PlayerCommands(commands.Cog):
                     await ReplyWith(f"⚙️ Error: {item} is not a `usable` item! \u200b\u200b⚙️")
                     return
                 
+                user.inventory.RemoveItem(item=item, amount=amount)
+
                 if name == 'lootbox':
                     await ReplyWith(f"📦 Attempting to open {amount} lootboxes! 📦")
-                    for _ in range(amount):
-                        amount_to_give = random.randint(1,5)
-                        items_to_give = [Item.GetRandomItem() for _ in range(amount_to_give)]
-                        hidden_content = ["**->** <a:loading:794672829202300939>" for _ in range(amount_to_give)]
-                        embed = discord.Embed(
-                        title="📦 Opening Lootbox 📦",
-                        description= "\n\n".join(hidden_content),
-                        color=discord.Color.dark_teal(),
-                        )
-                        msg = await ctx.reply(embed=embed)
-                        for i in range(amount_to_give):
-                            await asyncio.sleep(0.8)
-                            hidden_content[i] = f"**->** {items_to_give[i]}"
-                            embed.description = "\n\n".join(hidden_content)
-                            user.inventory.AddItem(items_to_give[i])
-                            await msg.edit(embed=embed)
+                    for i in range(amount):
+                        await RewardUI(ctx = ctx,
+                                       user = user,
+                                       items_to_give= [Item.GetRandomItem() for _ in range(random.randint(1,5))],
+                                       title= f"📦 Opening Lootbox `{i+1}` 📦"
+                                       )
+                                
+    @commands.command()
+    async def activate(self, ctx: commands.Context,  *items : str):
+        """will attempt to activate the item you have provided"""
+        async def ReplyWith(text : str):
+            embed = discord.Embed(
+            title="<a:loading:794672829202300939> ....Activating.... <a:loading:794672829202300939>",
+            description= text,
+            color=discord.Color.dark_teal(),
+            )
+            await ctx.send(embed=embed)
+        if len(items) < 2:
+            await ReplyWith("⚙️ Error! Use: **$activate `id | name` `arg` ** \u200b\u200b⚙️")
+            return
+        item = " ".join(items[:-1])
+        item = Item.GetItem(id=item)
+        arg = await converter.convert(ctx, items[-1])
+        if item.name == "Arctic Parasite":
+            user = Player.GetPlayer(id = ctx.author.id)
+            victim = Player.GetPlayer(id = arg.id)
+            if len(victim.inventory.items) == 0:
+                await ReplyWith(f"⚙️ Error: {victim} does not have any items! \u200b\u200b⚙️")
+                return
+            stolen_items = victim.inventory.GetRandomItems(count=random.randint(1,3))
+            # give the attacker the items
+            user.inventory.AddItems(items=stolen_items)
+            user.inventory.RemoveItem(Item.GetItem(id="Arctic Parasite"))
+            # remove the items from the victim
+            victim.inventory.RemoveItems(items=stolen_items)
+            await RewardUI(ctx = ctx,
+                           user = user,
+                           items_to_give= Inventory.GetDictAsList(stolen_items),
+                           title= f"💥 {user.name} has stolen {len(stolen_items)} items from {victim.name} ! 💥"
+                           )
 
+        else:
+            await ReplyWith(f"⚙️ Error: you cannot activate {item}! \u200b\u200b⚙️")
 
-
-                user.inventory.RemoveItem(item=item, amount=amount)
 
 def setup(bot):
     bot.add_cog(PlayerCommands(bot))

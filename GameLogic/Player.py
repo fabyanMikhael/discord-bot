@@ -42,6 +42,13 @@ class Player:
         if id in Player.PLAYER_REFERENCES: return Player.PLAYER_REFERENCES[id]
         return PlayerReference(id = id)
 
+    @staticmethod
+    def DeletePlayer(id : str) -> None:
+        id = str(id)
+        Player.GetPlayer(id)
+        Player.PLAYER_REFERENCES.pop(id).player = None
+        DATABASE.Delete(id)
+
     def ToDict(self) -> dict:
         result = {}
         result["id"] = self.id
@@ -79,6 +86,7 @@ class PlayerReference(object):
         Player.PLAYER_REFERENCES[id] = self
 
     def __repr__(self) -> str:
+        self.__attributeAccessed__()
         if self.player != None:
             return self.player.__repr__()
         return f"<EMPTY REFERENCE TO: {self.id}>"

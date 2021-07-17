@@ -1,3 +1,6 @@
+from GameLogic.Trading import Trade
+from GameLogic.Bees import BeeStorage
+from GameLogic.plants import PlantStorage
 import discord
 
 from discord.ext import commands
@@ -91,6 +94,30 @@ class DevCommands(commands.Cog):
 
     @commands.is_owner()
     @commands.command()
+    async def PeekSelling(self, ctx: commands.Context, user : discord.Member, page : int = 1):
+        items_for_sale = dict(enumerate(GLOBAL_SHOP.GetAllSalesFor(user = Player.GetPlayer(id = user.id))))
+        pages = GLOBAL_SHOP.__ToPages__(items_for_sale)
+        page = max(1, page)
+        page = min(page, len(pages))
+        page -= 1
+        embed = discord.Embed(
+        title=f"💷 Dev Tools ({user.name}'s items on sale) 💷",
+        description=pages[page],
+        color=discord.Color.dark_teal(),
+        )
+        embed.set_footer(text=f"({page + 1}/{len(pages)}) pages")
+        await ctx.send(embed=embed)
+
+    @commands.is_owner()
+    @commands.command()
+    async def cancelSalesFor(self, ctx: commands.Context, user : discord.Member):
+        sales = GLOBAL_SHOP.GetAllSalesFor(user = Player.GetPlayer(id = user.id))
+        for sale in sales:
+            sale.Cancel()
+        await ctx.reply(content=f"`💸` `x{len(sales)}` sales for {user.name} have been cancelled! `💸`")
+
+    @commands.is_owner()
+    @commands.command()
     async def GiveMoney(self, ctx: commands.Context, user : discord.Member, amount : int = 1):
         player: Player = Player.GetPlayer(user.id)
         player.balance += amount
@@ -129,15 +156,15 @@ class DevCommands(commands.Cog):
     @commands.command()
     async def SetBeeTime(self, ctx: commands.Context, time : int):
         from Utils.Constants import BEE_DURATION
-        await ctx.reply(content=f"Ok. changed bee growth time from {BEE_DURATION.NORMAL_BEE} to {pretty_time_delta(time)}")
-        BEE_DURATION.NORMAL_BEE = time
+        await ctx.reply(content=f"Ok. changed bee growth time from {pretty_time_delta(BEE_DURATION.normal_bee)} to {pretty_time_delta(time)}")
+        BEE_DURATION.normal_bee = time
 
     @commands.is_owner()
     @commands.command()
     async def SetSeedTime(self, ctx: commands.Context, time : int):
         from Utils.Constants import SEED_DURATION
-        await ctx.reply(content=f"Ok. changed plant growth time from {SEED_DURATION.X_SEED} to {pretty_time_delta(time)}")
-        SEED_DURATION.X_SEED = time
+        await ctx.reply(content=f"Ok. changed plant growth time from {pretty_time_delta(SEED_DURATION.x_seed)} to {pretty_time_delta(time)}")
+        SEED_DURATION.x_seed = time
 
     @commands.is_owner()
     @commands.command()
@@ -154,6 +181,24 @@ class DevCommands(commands.Cog):
         num = len(sales)
         for sale in sales: sale.Cancel()
         await ReplyWith(f"`✔️\u200b` successfully **cancelled**: x{num} sales!")
+
+    @commands.is_owner()
+    @commands.command()
+    async def ClearInv(self, ctx: commands.Context, user : discord.Member):
+        """clears the user's inventory"""
+        await ctx.reply(content=f"Ok. cleared {user.mention}'s inventory.")
+        Player.GetPlayer(user.id).inventory.Clear()
+
+    @commands.is_owner()
+    @commands.command()
+    async def Delete(self, ctx: commands.Context, user : discord.Member):
+        """Deletes a user from the databases"""
+        Player.DeletePlayer(user.id)
+        PlantStorage.DeletePlantStorage(user.id)
+        GLOBAL_SHOP.DeleteSalesFor(user.id)
+        BeeStorage.DeleteBeeStorage(user.id)
+        Trade.CancelTradesWith(user.id)
+        await ctx.reply(content=f"Ok. deleted {user.mention} from database.")
 
     @commands.is_owner()
     @commands.command()

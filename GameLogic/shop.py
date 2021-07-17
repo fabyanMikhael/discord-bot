@@ -4,7 +4,7 @@ from Utils.ErrorHandling import ShopError
 from GameLogic.Player import  Player
 from GameLogic.Items import Item
 from Utils.Constants import CURRENCY_SYMBOL, PAGE_ITEM_LIMIT
-from Utils.Database import ShopDatabase
+from Utils.Database import ShopDatabase as DATABASE
 import random, string
 
 class Sale:
@@ -72,7 +72,7 @@ class Shop:
         self.auction[id] = sale
         
         if first_time:
-            ShopDatabase.Insert(sale.seller.id, sale.ToDict())
+            DATABASE.Insert(sale.seller.id, sale.ToDict())
         return sale
 
     def GetSale(self, id : str) -> Sale:
@@ -87,9 +87,15 @@ class Shop:
         result : list[Sale] = [] 
         for sale_id in self.auction:
             sale = self.auction[sale_id]
-            if sale.seller == user:
+            if sale.seller.id == user.id:
                 result.append(sale)
         return result
+
+    def DeleteSalesFor(self, id : str) -> None:
+        id = str(id)
+        for sale in self.GetAllSalesFor(Player.GetPlayer(id=id)):
+            sale.Cancel()
+        DATABASE.DeleteAll(id)
 
     def HasSale(self, id : str) -> bool:
         return (id in self.auction)
@@ -112,7 +118,7 @@ class Shop:
 
     def RemoveSale(self, id : int) -> Shop:
         sale = self.auction.pop(id)
-        ShopDatabase.Delete({'seller': sale.seller.id, 'item': sale.item.id, 'amount': sale.item.id, 'price': sale.price})
+        DATABASE.Delete({'seller': sale.seller.id, 'item': sale.item.id, 'amount': sale.item.id, 'price': sale.price})
         return self
 
     def __repr__(self) -> str:
@@ -123,6 +129,6 @@ class Shop:
         return result
 
     def LoadAll(self):
-        sales = ShopDatabase.GetAll()
+        sales = DATABASE.GetAll()
         for sale in sales:
             self.AddSale(sale = Sale.FromDict(sale), first_time=False)

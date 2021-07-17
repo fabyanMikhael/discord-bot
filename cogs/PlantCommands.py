@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from GameLogic.Player import Player
 from GameLogic.Items import Item
-from GameLogic.plants import PlantStorage, XSeedPlant
+from GameLogic.plants import ArcticParasitePlant, PlantStorage, WoodenPlant, XSeedPlant
 
 from Utils.Constants import pretty_time_delta
 
@@ -35,6 +35,7 @@ class PlantCommands(commands.Cog):
         if not player.inventory.HasItem(item=water_droplet):
             await ReplyWith( f"Error! You do not have any {water_droplet} !" )
             return
+
         seed = " ".join(seed)
         seed_item = Item.GetItem(id = seed)
         if not player.inventory.HasItem(item=seed_item):
@@ -47,11 +48,28 @@ class PlantCommands(commands.Cog):
             player.inventory.RemoveItem(water_droplet)
             await ReplyWith(f"Successfully planted {seed_item} !\n\n It will take `{pretty_time_delta( int(plant.finishing_time - time.time()) )}` to finish! \n\n use `$checkplants` to check on it!")
             return
+        elif seed_item.name == "Wooden Seed":
+            plant = WoodenPlant(user=Player.GetPlayer(ctx.author.id))
+            player.inventory.RemoveItem(seed_item)
+            player.inventory.RemoveItem(water_droplet)
+            await ReplyWith(f"Successfully planted {seed_item} !\n\n It will take `{pretty_time_delta( int(plant.finishing_time - time.time()) )}` to finish! \n\n use `$checkplants` to check on it!")
+            return
+
+        elif seed_item.name == "Arctic Parasite Seed":
+            if not player.inventory.HasAmount(item=water_droplet, amount=2):
+                await ReplyWith( f"Error! You do not have `x2` {water_droplet} !" )
+                return
+            plant = ArcticParasitePlant(user=Player.GetPlayer(ctx.author.id))
+            player.inventory.RemoveItem(seed_item)
+            player.inventory.RemoveItem(water_droplet)
+            await ReplyWith(f"Successfully planted {seed_item} !\n\n It will take `{pretty_time_delta( int(plant.finishing_time - time.time()) )}` to finish! \n\n use `$checkplants` to check on it!")
+            return
 
         await ReplyWith( f"Error! {seed_item} is not a plantable item! !" )
 
     @commands.command()
     async def CheckPlants(self, ctx: commands.Context):
+        """check the plant that are currently being grown"""
         storage = PlantStorage.GetPlantStorage(id = ctx.author.id )
         await storage.CheckForCompletion(ctx)
 

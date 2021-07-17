@@ -21,15 +21,18 @@ class AbstractDatabase:
         value['id'] = str(key)
         self.collection.insert_one(value)
 
+    def Delete(self, key : str) -> None:
+        self.collection.delete_one({'id':str(key)})
+
+    def DeleteAll(self, key : str) -> None:
+        self.collection.delete_many({'id':str(key)})
+
+
     def Save(self, key : str,  value : dict) -> None:
         if self.Get(key=key) != None:
             self.collection.update_one({'id':str(key)}, {"$set": value}, upsert=False)
         else :
-            print("inserting: ", value)
             self.collection.insert_one(value)
-
-    def Delete(self, query : dict) -> None:
-        self.collection.delete_one(query)
 
     def GetAll(self) -> list[dict]:
         return self.collection.find({})

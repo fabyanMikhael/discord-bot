@@ -3,8 +3,8 @@ from __future__ import annotations
 from Utils.Database import PlantDatabase as DATABASE
 from GameLogic.Items import Item
 from GameLogic.Player import Player
-from Utils.Constants import SEED_DURATION, pretty_time_delta
-import random, asyncio, discord, time
+from Utils.Constants import RewardUI, SEED_DURATION, pretty_time_delta
+import random, time
 #####################################################
 
 class PlantStorage:
@@ -58,6 +58,13 @@ class PlantStorage:
         if id in PlantStorage.PLANTSTORAGE_REFERENCES: return PlantStorage.PLANTSTORAGE_REFERENCES[id]
         return PlantStorageReference(id = id)
 
+    @staticmethod
+    def DeletePlantStorage(id : str) -> None:
+        id = str(id)
+        PlantStorage.GetPlantStorage(id)
+        PlantStorage.PLANTSTORAGE_REFERENCES.pop(id).ReferencedItem = None
+        DATABASE.Delete(id)
+
 class Plant:
     def __init__(self, time: int, on_finish, user : Player, name : str = "Plant", type="normal") -> None:
         self.finishing_time: int = time
@@ -71,7 +78,7 @@ class Plant:
 
     def ToDict(self) -> dict:
         result = {}
-        result['time_left'] = int(self.finishing_time - time.time())
+        result['finishing_time'] = int(self.finishing_time)
         result['name'] = self.name
         result['type'] = self.type
         return result
@@ -80,35 +87,13 @@ class Plant:
     def FromDict(data : dict, id : str) -> Plant:
         plant_type = data['type']
         if plant_type == "x":
-            return XSeedPlant(user=Player.GetPlayer(id = id), time_left=data['time_left'], dont_plant=True)
+            return XSeedPlant(user=Player.GetPlayer(id = id), time_left=data['finishing_time'] - time.time(), dont_plant=True)
+        if plant_type == "wooden":
+            return WoodenPlant(user=Player.GetPlayer(id = id), time_left=data['finishing_time'] - time.time(), dont_plant=True)
+        if plant_type == "arctic":
+            return ArcticParasitePlant(user=Player.GetPlayer(id = id), time_left=data['finishing_time'] - time.time(), dont_plant=True)
+
         raise TypeError(f"attempted to load unknown plant time!! (type={plant_type})")
-
-
-
-def XSeedPlant(user : Player, time_left : int = SEED_DURATION.X_SEED, dont_plant = False) -> Plant:
-    async def Reward(ctx):
-        amount_to_give = random.randint(2,8)
-        items_to_give = [Item.GetRandomItem() for _ in range(amount_to_give)]
-        hidden_content = ["**->** <a:loading:794672829202300939>" for _ in range(amount_to_give)]
-        embed = discord.Embed(
-        title="💠 Harvesting 🌱 X Plant 💠",
-        description= "\n\n".join(hidden_content),
-        color=discord.Color.dark_teal(),
-        )
-        msg = await ctx.reply(embed=embed)
-        for i in range(amount_to_give):
-            await asyncio.sleep(0.9)
-            hidden_content[i] = f"**->** {items_to_give[i]}"
-            embed.description = "\n\n".join(hidden_content)
-            Player.GetPlayer(user.id).inventory.AddItem(items_to_give[i])
-            await msg.edit(embed=embed)
-
-    plant = Plant(time= int(time_left + time.time()), on_finish = Reward, user = user, name="`🌱 X Plant`", type="x")
-    if not dont_plant:
-        PlantStorage.PlantForUser(user = user,
-                                plant = plant,
-                                )
-    return plant
 
 class PlantStorageReference(object):
     def __init__(self, id : str) -> None:
@@ -141,3 +126,59 @@ class PlantStorageReference(object):
         if data != None:
             return PlantStorage.FromDict( data )
         return PlantStorage(id=id)
+
+
+
+
+
+
+############################## PLANT REWARDS ##############################
+def XSeedPlant(user : Player, time_left : int = None, dont_plant = False) -> Plant:
+    if time_left == None: time_left = SEED_DURATION.x_seed
+    async def Reward(ctx):
+        items_to_give = [Item.GetRandomItem() for _ in range(random.randint(2,8))]
+        await RewardUI(ctx=ctx,
+                user=user,
+                items_to_give=items_to_give,
+                title="💠 Harvesting Plants 💠")
+
+    plant = Plant(time= int(time_left + time.time()), on_finish = Reward, user = user, name="`🌱 X Plant`", type="x")
+    if not dont_plant:
+        PlantStorage.PlantForUser(user = user,
+                                plant = plant,
+                                )
+    return plant
+
+def WoodenPlant(user : Player, time_left : int = None, dont_plant = False) -> Plant:
+    if time_left == None: time_left = SEED_DURATION.wooden_seed
+    async def Reward(ctx):
+        items_to_give = Item.GetRandomItemsFrom(category="wooden", count=random.randint(1,2)) + Item.GetRandomItems(count=random.randint(1,3))
+
+        await RewardUI(ctx=ctx,
+                user=user,
+                items_to_give=items_to_give,
+                title="💠 Harvesting Plants 💠")
+
+    plant = Plant(time= int(time_left + time.time()), on_finish = Reward, user = user, name="<:WoodenSeed:865434094917124157> Wooden Plant", type="wooden")
+    if not dont_plant:
+        PlantStorage.PlantForUser(user = user,
+                                plant = plant,
+                                )
+    return plant
+
+def ArcticParasitePlant(user : Player, time_left : int = None, dont_plant = False) -> Plant:
+    if time_left == None: time_left = SEED_DURATION.arctic_parasite
+    async def Reward(ctx):
+        items_to_give = Item.GetRandomItemsFrom(category="arctic", count=random.randint(0,2)) + Item.GetRandomItems(count=random.randint(2,5))
+
+        await RewardUI(ctx=ctx,
+                user=user,
+                items_to_give=items_to_give,
+                title="💠 Harvesting Plants 💠")
+
+    plant = Plant(time= int(time_left + time.time()), on_finish = Reward, user = user, name="<:arcticParasitePlant:865436985237176330> Arctic Parasite", type="arctic")
+    if not dont_plant:
+        PlantStorage.PlantForUser(user = user,
+                                plant = plant,
+                                )
+    return plant
