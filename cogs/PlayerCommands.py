@@ -378,6 +378,7 @@ class PlayerCommands(commands.Cog):
         
         items_to_sell = {}
         money_gained = 0
+        multiplier = 1.0
         for id,amount in zip(items[0::2], items[1::2]):
             amount = int(amount)
             item = Item.GetItem(id=id)
@@ -387,13 +388,20 @@ class PlayerCommands(commands.Cog):
             if not player.inventory.HasAmount(item, amount):
                 await ReplyWith(f"⚙️ Error: You do not have `x{amount}` of {item} \u200b\u200b⚙️")
                 return
-
+            if item.name.lower() == "clover":
+                multiplier += 0.2
+            elif item.name.lower() == "four leaf clover":
+                multiplier += 1
             items_to_sell[item] = amount
             money_gained += amount + random.randint(0, amount)
 
+        money_gained = int(money_gained*multiplier)
         player.inventory.RemoveItems(items_to_sell)
         player.balance += money_gained
-        await ReplyWith(f"You have discarded `{money_gained}` items and gained `💰{money_gained}` !")
+        txt = ""
+        if multiplier > 1.0:
+            txt = f" (x{multiplier}🍀)"
+        await ReplyWith(f"You have discarded `{money_gained}` items and gained `💰{money_gained}`{txt} !")
 
         
 
@@ -498,7 +506,7 @@ class PlayerCommands(commands.Cog):
                     return
                 
                 name = item.name.lower()
-                if not name in ['lootbox']:
+                if not name in ['lootbox', 'purse']:
                     await ReplyWith(f"⚙️ Error: {item} is not a `usable` item! \u200b\u200b⚙️")
                     return
                 
@@ -512,7 +520,22 @@ class PlayerCommands(commands.Cog):
                                        items_to_give= [Item.GetRandomItem() for _ in range(random.randint(1,5))],
                                        title= f"📦 Opening Lootbox `{i+1}` 📦"
                                        )
+
+                if name == 'purse':
+                    for i in range(amount):
+                        amount = random.randint(1,10)
+                        if random.randint(1,1000) <= 2:
+                            amount += 100
+                        embed = discord.Embed(
+                        title=f"👛 Attempting to open `x{amount}` Purse! 👛",
+                        description= f"You found `{CURRENCY_SYMBOL}{amount}`` !",
+                        color=discord.Color.dark_teal(),
+                        )
+                        user.balance += amount
+                        await ctx.send(embed=embed)
+                        
                                 
+
     @commands.command()
     async def activate(self, ctx: commands.Context,  *items : str):
         """will attempt to activate the item you have provided"""
