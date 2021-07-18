@@ -389,7 +389,7 @@ class PlayerCommands(commands.Cog):
                 return
 
             items_to_sell[item] = amount
-            money_gained += amount * 1
+            money_gained += amount + random.randint(0, amount)
 
         player.inventory.RemoveItems(items_to_sell)
         player.balance += money_gained
@@ -583,7 +583,12 @@ class PlayerCommands(commands.Cog):
             await GiveDaily()
             return
         next_claim = DAILY_REWARD_TIME - time_left
-        await ctx.send(f"You have cannot claim your daily reward yet! You have to wait `{pretty_time_delta(int(next_claim))}` before claiming it!")
+        embed = discord.Embed(
+        title="📅 Daily 📅",
+        description= f"You have cannot `claim` your daily reward **yet**! You have to wait `{pretty_time_delta(int(next_claim))}` before claiming it!",
+        color=discord.Color.dark_teal(),
+        )
+        await ctx.send(embed=embed)
 
 
 def setup(bot):

@@ -79,7 +79,7 @@ class Bee:
 
     def ToDict(self) -> dict:
         result = {}
-        result['time_left'] = int(self.finishing_time - time.time())
+        result['finishing_time'] = int(self.finishing_time - time.time())
         result['name'] = self.name
         result['type'] = self.type
         return result
@@ -88,7 +88,7 @@ class Bee:
     def FromDict(data : dict, id : str) -> Bee:
         plant_type = data['type']
         if plant_type == "normal":
-            return NormalBee(user= Player.GetPlayer(id = id), time_left=data['time_left'], dont_grow=True)
+            return NormalBee(user= Player.GetPlayer(id = id), time_left=data['finishing_time'] - time.time(), dont_grow=True)
         raise TypeError(f"attempted to load unknown plant time!! (type={plant_type})")
 
 
@@ -102,7 +102,7 @@ def NormalBee(user : Player, time_left : int = None, dont_grow = False) -> Bee:
         user.inventory.AddItem(Item.GetItem("bee"))
         await RewardUI(ctx = ctx,
                        user=user,
-                       items=items_to_give,
+                       items_to_give=items_to_give,
                        title="🐝 Harvesting Bees 🐝",)
      
     bee = Bee(time = int( time_left + time.time() ), on_finish = Reward, user = user, name="`🐝 Bee`", type="normal")
