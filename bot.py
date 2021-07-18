@@ -77,7 +77,7 @@ async def on_reaction_add(reaction : Reaction, user):
             await callback(reaction,user)
     
 
-#bot.on_command_error = command_error
+bot.on_command_error = command_error
 
 
 @tasks.loop(seconds=(60 * 5))

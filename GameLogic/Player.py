@@ -7,7 +7,7 @@ class Player:
     PLAYER_REFERENCES : dict[str, PlayerReference] = {}
     BOT = None
 
-    def __init__(self, id : str, balance: int = 20, inventory: Inventory = None) -> None:
+    def __init__(self, id : str, balance: int = 20, inventory: Inventory = None, extra : dict = None) -> None:
         self.id : str = str(id)
         self.balance : int = balance
         ####### not what i would like , but i need this to retrieve the user's name #######
@@ -15,6 +15,7 @@ class Player:
         self.name = get(Player.BOT.get_all_members(), id=int(id)).name
         ###################################################################################
         self.inventory : Inventory = Inventory() if inventory == None else inventory
+        self.extra = {} if extra == None else extra
 
     def __hash__(self) -> int:
         return int(self.id)
@@ -54,13 +55,15 @@ class Player:
         result["id"] = self.id
         result["balance"] = self.balance
         result["inventory"] = self.inventory.ToDict()
+        result["extra"] = self.extra
         return result
 
     @staticmethod
     def FromDict(data : dict) -> Player:
         result = Player(id = data.get('id'),
                         balance = data.get('balance', 20),
-                        inventory= Inventory.FromDict( data.get('inventory', {}) )
+                        inventory= Inventory.FromDict( data.get('inventory', {}) ),
+                        extra = data.get('extra', None)
                         )
         return result
 

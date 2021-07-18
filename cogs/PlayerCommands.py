@@ -11,7 +11,7 @@ from GameLogic.shop import Sale, CURRENCY_SYMBOL
 from GameLogic.Player import Player
 from GameLogic.Items import Inventory, Item
 from GameLogic.Trading import PendingTrade, Trade, IsTrading, GetAnyTradeInvolving
-from Utils.Constants import ITEMS_PER_TRADE_LIMIT, RewardUI, SHOP_CONSTANTS
+from Utils.Constants import DAILY_REWARD_TIME, HOUR, ITEMS_PER_TRADE_LIMIT, RewardUI, SHOP_CONSTANTS
 
 from Utils.Constants import GLOBAL_SHOP, pretty_time_delta, ConvertItemList
 from discord.ext.commands import MemberConverter
@@ -557,6 +557,34 @@ class PlayerCommands(commands.Cog):
         time_left = int( SHOP_CONSTANTS.next_refresh_at - time.time() )
         time_left = pretty_time_delta(seconds=time_left)
         await ctx.send(f"The next shop `refresh` is in `{time_left}`")
+
+    @commands.command()
+    async def Daily(self, ctx: commands.Context):
+        """Gives you daily rewards"""
+        player = Player.GetPlayer(id=ctx.author.id)
+        async def GiveDaily():
+            items = {Item.GetItem(id="lootbox") : 3,
+                    Item.GetItem(id="water droplet") : 3,
+                    Item.GetItem(id="honey") : 1,
+                    }
+            await RewardUI(ctx = ctx,
+                           user = player,
+                           items_to_give= Inventory.GetDictAsList(items),
+                           title= "Daily Reward"
+                           )
+            player.extra['last_claimed_daily'] = int( time.time() )
+
+        last_claimed_daily = player.extra.get("last_claimed_daily", None)
+        if last_claimed_daily == None:
+            await GiveDaily()
+            return
+        time_left = time.time() - last_claimed_daily
+        if time_left > DAILY_REWARD_TIME:
+            await GiveDaily()
+            return
+        next_claim = DAILY_REWARD_TIME - time_left
+        await ctx.send(f"You have cannot claim your daily reward yet! You have to wait `{pretty_time_delta(int(next_claim))}` before claiming it!")
+
 
 def setup(bot):
     bot.add_cog(PlayerCommands(bot))

@@ -33,6 +33,10 @@ class BEE_DURATION:
     normal_bee = MINUTE * 10
 
 HOUR = 60 * 60
+
+# Daily Reward Time
+DAILY_REWARD_TIME = HOUR * 20
+
 #Time it takes for a pet to grow up
 PET_GROWTH_DURATION = HOUR * 18
 

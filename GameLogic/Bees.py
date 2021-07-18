@@ -97,8 +97,8 @@ def NormalBee(user : Player, time_left : int = None, dont_grow = False) -> Bee:
     if time_left == None: time_left = BEE_DURATION.normal_bee
     async def Reward(ctx):
 
-        items_to_give = [Item.GetItem("honey") for _ in range(random.randint(1,3))]
-        for _ in range(random.randint(1,3)): items_to_give.append(Item.GetRandomItem())
+        items_to_give = [Item.GetItem("honey") for _ in range(random.randint(0,2))]
+        for _ in range(random.randint(1,2)): items_to_give.append(Item.GetRandomItem())
         user.inventory.AddItem(Item.GetItem("bee"))
         await RewardUI(ctx = ctx,
                        user=user,
