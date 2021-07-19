@@ -103,7 +103,7 @@ def NormalBee(user : Player, time_left : int = None, dont_grow = False) -> Bee:
         await RewardUI(ctx = ctx,
                        user=user,
                        items_to_give=items_to_give,
-                       title="🐝 Harvesting Bees 🐝",)
+                       title="`🐝` Harvesting Bees `🐝`",)
      
     bee = Bee(time = int( time_left + time.time() ), on_finish = Reward, user = user, name="`🐝 Bee`", type="normal")
     if not dont_grow:    

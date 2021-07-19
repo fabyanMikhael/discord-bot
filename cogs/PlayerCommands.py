@@ -364,7 +364,7 @@ class PlayerCommands(commands.Cog):
         """will sell the items for $1 each"""
         async def ReplyWith(text : str):
             embed = discord.Embed(
-            title="💷 Discarding 💷",
+            title="`💷` Discarding `💷`",
             description= text,
             color=discord.Color.dark_teal(),
             )
@@ -378,6 +378,7 @@ class PlayerCommands(commands.Cog):
         
         items_to_sell = {}
         money_gained = 0
+        items_discarded = 0
         multiplier = 1.0
         for id,amount in zip(items[0::2], items[1::2]):
             amount = int(amount)
@@ -389,10 +390,11 @@ class PlayerCommands(commands.Cog):
                 await ReplyWith(f"⚙️ Error: You do not have `x{amount}` of {item} \u200b\u200b⚙️")
                 return
             if item.name.lower() == "clover":
-                multiplier += 0.2
+                multiplier += 0.2 * amount
             elif item.name.lower() == "four leaf clover":
-                multiplier += 1
+                multiplier += 1 * amount
             items_to_sell[item] = amount
+            items_discarded += amount
             money_gained += amount + random.randint(0, amount)
 
         money_gained = int(money_gained*multiplier)
@@ -400,8 +402,8 @@ class PlayerCommands(commands.Cog):
         player.balance += money_gained
         txt = ""
         if multiplier > 1.0:
-            txt = f" (x{multiplier}🍀)"
-        await ReplyWith(f"You have discarded `{money_gained}` items and gained `💰{money_gained}`{txt} !")
+            txt = f" (`x{multiplier}🍀`)"
+        await ReplyWith(f"You have discarded `{items_discarded}` items and gained `💰{money_gained}`{txt} !")
 
         
 
@@ -412,7 +414,7 @@ class PlayerCommands(commands.Cog):
         items = ConvertItemList(items)
         async def ReplyWith(text : str):
             embed = discord.Embed(
-            title="💷 Trading 💷",
+            title="`💷` Trading `💷`",
             description= text,
             color=discord.Color.dark_teal(),
             )
@@ -465,7 +467,7 @@ class PlayerCommands(commands.Cog):
 
         ######## CREATE TRADE MESSAGE ########
         embed = discord.Embed(
-        title="💷 Trading 💷",
+        title="`💷` Trading `💷`",
         description= f"`🎉` **User {user} accepted trade with {trade.UserOne}!** `🎉`",
         color=discord.Color.dark_teal(),
         )
@@ -482,7 +484,7 @@ class PlayerCommands(commands.Cog):
         items = ConvertItemList(items)
         async def ReplyWith(text : str):
             embed = discord.Embed(
-            title="💷 Using 💷",
+            title="`💷` Using `💷`",
             description= text,
             color=discord.Color.dark_teal(),
             )
@@ -518,7 +520,7 @@ class PlayerCommands(commands.Cog):
                         await RewardUI(ctx = ctx,
                                        user = user,
                                        items_to_give= [Item.GetRandomItem() for _ in range(random.randint(1,5))],
-                                       title= f"📦 Opening Lootbox `{i+1}` 📦"
+                                       title= f"`📦` Opening Lootbox `{i+1}` `📦`"
                                        )
 
                 if name == 'purse':
@@ -527,8 +529,8 @@ class PlayerCommands(commands.Cog):
                         if random.randint(1,1000) <= 2:
                             amount += 100
                         embed = discord.Embed(
-                        title=f"👛 Attempting to open `x{amount}` Purse! 👛",
-                        description= f"You found `{CURRENCY_SYMBOL}{amount}`` !",
+                        title=f"`👛` Attempting to open Purse! `👛`",
+                        description= f"You found `{CURRENCY_SYMBOL}{amount}` !",
                         color=discord.Color.dark_teal(),
                         )
                         user.balance += amount
@@ -567,7 +569,7 @@ class PlayerCommands(commands.Cog):
             await RewardUI(ctx = ctx,
                            user = user,
                            items_to_give= Inventory.GetDictAsList(stolen_items),
-                           title= f"💥 {user.name} has stolen {len(stolen_items)} items from {victim.name} ! 💥"
+                           title= f"`💥` {user.name} has stolen {len(stolen_items)} items from {victim.name} ! `💥`"
                            )
 
         else:
@@ -593,7 +595,7 @@ class PlayerCommands(commands.Cog):
             await RewardUI(ctx = ctx,
                            user = player,
                            items_to_give= Inventory.GetDictAsList(items),
-                           title= "Daily Reward"
+                           title= "`📅` Daily Reward `📅`"
                            )
             player.extra['last_claimed_daily'] = int( time.time() )
 
@@ -607,7 +609,7 @@ class PlayerCommands(commands.Cog):
             return
         next_claim = DAILY_REWARD_TIME - time_left
         embed = discord.Embed(
-        title="📅 Daily 📅",
+        title="`📅` Daily `📅`",
         description= f"You have cannot `claim` your daily reward **yet**! You have to wait `{pretty_time_delta(int(next_claim))}` before claiming it!",
         color=discord.Color.dark_teal(),
         )

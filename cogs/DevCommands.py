@@ -21,7 +21,7 @@ class DevCommands(commands.Cog):
         items = ConvertItemList(items=items)
         async def ReplyWith(text : str):
             embed = discord.Embed(
-            title="😈 Dev Tools 😈",
+            title="`😈` Dev Tools `😈`",
             description= text,
             color=discord.Color.dark_teal(),
             )
@@ -51,7 +51,7 @@ class DevCommands(commands.Cog):
         items = ConvertItemList(items=items)
         async def ReplyWith(text : str):
             embed = discord.Embed(
-            title="😈 Dev Tools 😈",
+            title="`😈` Dev Tools `😈`",
             description= text,
             color=discord.Color.dark_teal(),
             )
@@ -84,7 +84,7 @@ class DevCommands(commands.Cog):
         page = min(page, len(pages))
         page -= 1
         embed = discord.Embed(
-        title="😈 Dev Tools 😈",
+        title="`😈` Dev Tools `😈`",
         description= pages[page],
         color=discord.Color.dark_teal(),
         )
@@ -101,7 +101,7 @@ class DevCommands(commands.Cog):
         page = min(page, len(pages))
         page -= 1
         embed = discord.Embed(
-        title=f"💷 Dev Tools ({user.name}'s items on sale) 💷",
+        title=f"`💷` Dev Tools ({user.name}'s items on sale) `💷`",
         description=pages[page],
         color=discord.Color.dark_teal(),
         )
@@ -122,8 +122,8 @@ class DevCommands(commands.Cog):
         player: Player = Player.GetPlayer(user.id)
         player.balance += amount
         embed = discord.Embed(
-        title="😈 Dev Tools 😈",
-        description= f"Given {CURRENCY_SYMBOL} {amount} to {player.name}\n\n**NEW Balance:**`{CURRENCY_SYMBOL} {player.balance}`",
+        title="`😈` Dev Tools `😈`",
+        description= f"Given `{CURRENCY_SYMBOL}{amount}` to {player.name}\n\n**NEW Balance:**`{CURRENCY_SYMBOL} {player.balance}`",
         color=discord.Color.dark_teal(),
         )
         await ctx.send(content=f"<@{user.id}>", embed=embed)
@@ -134,7 +134,7 @@ class DevCommands(commands.Cog):
         player: Player = Player.GetPlayer(user.id)
         player.balance -= amount
         embed = discord.Embed(
-        title="💰 Money 💰",
+        title="`💰` Money `💰`",
         description= f"Taken {CURRENCY_SYMBOL} {amount} from {player.name}\n\n**NEW Balance:**`{CURRENCY_SYMBOL} {player.balance}`",
         color=discord.Color.dark_teal(),
         )
@@ -171,7 +171,7 @@ class DevCommands(commands.Cog):
     async def CancelAllTrades(self, ctx: commands.Context):
         async def ReplyWith(text : str):
             embed = discord.Embed(
-            title="💷 Selling 💷",
+            title="`💷` Selling `💷`",
             description= text,
             color=discord.Color.dark_teal(),
             )

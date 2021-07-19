@@ -140,7 +140,7 @@ def XSeedPlant(user : Player, time_left : int = None, dont_plant = False) -> Pla
         await RewardUI(ctx=ctx,
                 user=user,
                 items_to_give=items_to_give,
-                title="💠 Harvesting Plants 💠")
+                title="`💠` Harvesting Plants `💠`")
 
     plant = Plant(time= int(time_left + time.time()), on_finish = Reward, user = user, name="`🌱 X Plant`", type="x")
     if not dont_plant:
@@ -157,7 +157,7 @@ def WoodenPlant(user : Player, time_left : int = None, dont_plant = False) -> Pl
         await RewardUI(ctx=ctx,
                 user=user,
                 items_to_give=items_to_give,
-                title="💠 Harvesting Plants 💠")
+                title="`💠` Harvesting Plants `💠`")
 
     plant = Plant(time= int(time_left + time.time()), on_finish = Reward, user = user, name="<:WoodenSeed:865434094917124157> Wooden Plant", type="wooden")
     if not dont_plant:
@@ -174,7 +174,7 @@ def ArcticParasitePlant(user : Player, time_left : int = None, dont_plant = Fals
         await RewardUI(ctx=ctx,
                 user=user,
                 items_to_give=items_to_give,
-                title="💠 Harvesting Plants 💠")
+                title="`💠` Harvesting Plants `💠`")
 
     plant = Plant(time= int(time_left + time.time()), on_finish = Reward, user = user, name="<:arcticParasitePlant:865436985237176330> Arctic Parasite", type="arctic")
     if not dont_plant:

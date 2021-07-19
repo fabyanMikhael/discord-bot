@@ -20,7 +20,7 @@ class BeeCommands(commands.Cog):
     async def GrowBee(self, ctx: commands.Context, *bees : str):
         async def ReplyWith(text):
             embed = discord.Embed(
-            title="🐝Beekeeping🐝",
+            title="`🐝` Beekeeping `🐝`",
             description= text,
             color=discord.Color.dark_teal(),
             )
@@ -54,7 +54,7 @@ class BeeCommands(commands.Cog):
         await storage.CheckForCompletion(ctx)
 
         embed = discord.Embed(
-        title="🐝Beekeeping🐝",
+        title="`🐝` Beekeeping `🐝`",
         description= "Bees In Storage: ",
         color=discord.Color.dark_teal(),
         )

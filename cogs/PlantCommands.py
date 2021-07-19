@@ -21,7 +21,7 @@ class PlantCommands(commands.Cog):
     async def Plant(self, ctx: commands.Context, *seed : str):
         async def ReplyWith(text):
             embed = discord.Embed(
-            title="💠Plants💠",
+            title="`💠` Plants `💠`",
             description= text,
             color=discord.Color.dark_teal(),
             )
@@ -74,7 +74,7 @@ class PlantCommands(commands.Cog):
         await storage.CheckForCompletion(ctx)
 
         embed = discord.Embed(
-        title="💠Plants💠",
+        title="`💠` Plants `💠`",
         description= "Plants In Storage: ",
         color=discord.Color.dark_teal(),
         )
